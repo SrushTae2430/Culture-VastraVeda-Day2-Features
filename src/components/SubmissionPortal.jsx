@@ -157,8 +157,12 @@ const SubmissionPortal = () => {
        return { ...translation, isFallback: false };
     }
     // Fallback to source language
-    const sourceTrans = sub.translations?.[sub.sourceLanguage || sub.language];
-    return { ...sourceTrans, isFallback: true, sourceLang: sub.sourceLanguage || sub.language };
+    const sourceLang = sub.sourceLanguage || sub.language || 'English';
+    const sourceTrans = sub.translations?.[sourceLang];
+    if (sourceTrans) {
+       return { ...sourceTrans, isFallback: true, sourceLang };
+    }
+    return { name: sub.name, region: sub.region, fabric: sub.fabric, embroidery: sub.embroidery, isFallback: true, sourceLang };
   };
 
   const languages = ['English', 'Hindi', 'Marathi', 'Tamil', 'Bengali', 'Gujarati'];
@@ -210,7 +214,7 @@ const SubmissionPortal = () => {
                 <div key={sub.id} className="bg-zinc-900/50 border border-zinc-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-zinc-700 transition-colors">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-medium text-white">{sub.translations[sub.sourceLanguage]?.name}</h4>
+                      <h4 className="font-medium text-white">{sub.translations?.[sub.sourceLanguage || sub.language]?.name || sub.name}</h4>
                       <span className={`text-[10px] px-2 py-0.5 rounded-md uppercase font-bold tracking-wider ${
                         sub.status === 'pending' ? 'bg-yellow-900/40 text-yellow-500 border border-yellow-800/50' :
                         sub.status === 'approved' ? 'bg-green-900/40 text-green-500 border border-green-800/50' :
@@ -219,13 +223,13 @@ const SubmissionPortal = () => {
                         {sub.status}
                       </span>
                       <span className="text-[10px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-md border border-zinc-700">
-                        {sub.sourceLanguage}
+                        {sub.sourceLanguage || sub.language || 'English'}
                       </span>
                     </div>
                     <p className="text-xs text-zinc-400 flex items-center gap-2">
-                      <span className="w-1 h-1 bg-zinc-700 rounded-full"></span> {sub.translations[sub.sourceLanguage]?.region} 
-                      <span className="w-1 h-1 bg-zinc-700 rounded-full"></span> {sub.translations[sub.sourceLanguage]?.fabric}
-                      <span className="w-1 h-1 bg-zinc-700 rounded-full"></span> {Object.keys(sub.translations || {}).length} Languages
+                      <span className="w-1 h-1 bg-zinc-700 rounded-full"></span> {sub.translations?.[sub.sourceLanguage || sub.language]?.region || sub.region} 
+                      <span className="w-1 h-1 bg-zinc-700 rounded-full"></span> {sub.translations?.[sub.sourceLanguage || sub.language]?.fabric || sub.fabric}
+                      <span className="w-1 h-1 bg-zinc-700 rounded-full"></span> {Object.keys(sub.translations || {}).length || 1} Languages
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -268,25 +272,25 @@ const SubmissionPortal = () => {
           {translationTask ? (
             <div className="bg-zinc-900/80 border border-orange-500/30 p-8 rounded-3xl backdrop-blur-md">
               <div className="flex justify-between items-center mb-8 border-b border-zinc-800 pb-4">
-                <h4 className="text-lg font-semibold text-white">Translating: {translationTask.translations[translationTask.sourceLanguage].name}</h4>
+                <h4 className="text-lg font-semibold text-white">Translating: {translationTask.translations?.[translationTask.sourceLanguage || translationTask.language]?.name || translationTask.name}</h4>
                 <button onClick={() => setTranslationTask(null)} className="text-zinc-500 hover:text-white text-sm">✕ Close</button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                  <div className="space-y-4">
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Source Content ({translationTask.sourceLanguage})</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Source Content ({translationTask.sourceLanguage || translationTask.language || 'English'})</p>
                     <div className="bg-black/40 p-5 rounded-2xl border border-zinc-800/50 space-y-4">
                        <div>
                           <label className="text-[10px] text-zinc-600 block mb-1">NAME</label>
-                          <p className="text-sm text-zinc-300">{translationTask.translations[translationTask.sourceLanguage].name}</p>
+                          <p className="text-sm text-zinc-300">{translationTask.translations?.[translationTask.sourceLanguage || translationTask.language]?.name || translationTask.name}</p>
                        </div>
                        <div>
                           <label className="text-[10px] text-zinc-600 block mb-1">REGION</label>
-                          <p className="text-sm text-zinc-300">{translationTask.translations[translationTask.sourceLanguage].region}</p>
+                          <p className="text-sm text-zinc-300">{translationTask.translations?.[translationTask.sourceLanguage || translationTask.language]?.region || translationTask.region}</p>
                        </div>
                        <div>
                           <label className="text-[10px] text-zinc-600 block mb-1">EMBROIDERY</label>
-                          <p className="text-sm text-zinc-300 leading-relaxed italic">"{translationTask.translations[translationTask.sourceLanguage].embroidery}"</p>
+                          <p className="text-sm text-zinc-300 leading-relaxed italic">"{translationTask.translations?.[translationTask.sourceLanguage || translationTask.language]?.embroidery || translationTask.embroidery}"</p>
                        </div>
                     </div>
                  </div>
@@ -301,7 +305,7 @@ const SubmissionPortal = () => {
                          required
                        >
                          <option value="">Select Target Language</option>
-                         {languages.filter(l => l !== translationTask.sourceLanguage && !translationTask.translations[l]).map(l => (
+                         {languages.filter(l => l !== (translationTask.sourceLanguage || translationTask.language || 'English') && !(translationTask.translations && translationTask.translations[l])).map(l => (
                            <option key={l} value={l}>{l}</option>
                          ))}
                        </select>
@@ -342,11 +346,11 @@ const SubmissionPortal = () => {
               {approvedSubmissions.map(sub => (
                 <div key={sub.id} className="bg-zinc-900/50 border border-zinc-800 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <h4 className="font-medium text-white mb-1">{sub.translations[sub.sourceLanguage]?.name}</h4>
+                    <h4 className="font-medium text-white mb-1">{sub.translations?.[sub.sourceLanguage || sub.language]?.name || sub.name}</h4>
                     <div className="flex flex-wrap gap-2">
                        {languages.map(lang => (
                           <span key={lang} className={`text-[9px] px-2 py-0.5 rounded-full border ${
-                            sub.translations[lang] ? 'bg-green-900/20 text-green-500 border-green-800/30' : 'bg-zinc-800 text-zinc-500 border-zinc-700'
+                            (sub.translations && sub.translations[lang]) || (!sub.translations && lang === (sub.sourceLanguage || sub.language || 'English')) ? 'bg-green-900/20 text-green-500 border-green-800/30' : 'bg-zinc-800 text-zinc-500 border-zinc-700'
                           }`}>
                             {lang}
                           </span>
@@ -356,7 +360,7 @@ const SubmissionPortal = () => {
                   <button 
                     onClick={() => {
                        setTranslationTask(sub);
-                       setTransData(prev => ({ ...prev, name: '', region: '', language: '', fabric: sub.translations[sub.sourceLanguage].fabric, embroidery: '' }));
+                       setTransData(prev => ({ ...prev, name: '', region: '', language: '', fabric: sub.translations?.[sub.sourceLanguage || sub.language]?.fabric || sub.fabric, embroidery: '' }));
                     }}
                     className="text-xs bg-zinc-800 hover:bg-white hover:text-black text-white px-5 py-2.5 rounded-xl font-semibold transition-all"
                   >
